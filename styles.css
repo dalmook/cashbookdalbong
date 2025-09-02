@@ -179,3 +179,22 @@ dialog{ border: 0; border-radius: var(--radius-lg); padding: 0; box-shadow: var(
   .filters{ flex-wrap: wrap; overflow: visible; }
   .filters select{ flex: 0 0 auto; min-width: 160px; }
 }
+/* 아이 탭: 스냅 스크롤 */
+.kid-tabs{
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding-right: max(12px, env(safe-area-inset-right)); /* 오른쪽 잘림 방지 */
+  scroll-padding: 12px;
+}
+.kid-tabs::-webkit-scrollbar{ display: none; }
+
+/* 각각의 카드가 화면 너비에 거의 맞게 */
+.kid-card{
+  scroll-snap-align: start;
+  min-width: calc(100vw - 40px); /* 좌/우 패딩 감안 */
+  width: calc(100vw - 40px);
+}
+.kid-name{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
