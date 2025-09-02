@@ -1,0 +1,128 @@
+/* GRID-2 모바일 최적화 버전 */
+:root{
+  --bg:#fff7fb; --card:#fff; --ink:#35333a; --muted:#6e6a7d;
+  --primary:#ff7ab6; --primary-ink:#fff; --accent:#ffa3c7;
+  --pos:#00a66f; --neg:#d73a49; --ring:rgba(255,122,182,.35);
+  --shadow:0 10px 22px rgba(0,0,0,.06); --radius-lg:20px; --gap:12px; --touch:44px;
+  --vw:100vw;
+}
+@supports (width: 100dvw){ :root{ --vw:100dvw; } }
+
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ height:100%; overflow-x:hidden; }
+body{
+  margin:0; background:linear-gradient(180deg, var(--bg), #fff); color:var(--ink);
+  font-family:'Noto Sans KR', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size:16px; touch-action:manipulation; -webkit-text-size-adjust:100%; text-size-adjust:100%;
+}
+
+.app-header,.container,.app-footer{
+  padding-left:max(12px, env(safe-area-inset-left));
+  padding-right:max(12px, env(safe-area-inset-right));
+}
+.app-header{ padding-top:max(10px, env(safe-area-inset-top)); }
+.app-footer{ padding-bottom:max(16px, env(safe-area-inset-bottom)); }
+
+.app-header{
+  position:sticky; top:0; z-index:10;
+  display:grid; grid-template-columns:1fr; gap:10px;
+  background:var(--card); box-shadow:var(--shadow); padding:12px;
+}
+.brand{ display:flex; align-items:center; gap:10px; }
+.brand-emoji{ font-size:26px; }
+h1{ font-family:'Jua', cursive; font-size:20px; margin:0; letter-spacing:.4px; }
+
+.top-actions{
+  display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.top-actions::-webkit-scrollbar{ display:none; }
+.btn{
+  border:0; border-radius:14px; padding:12px 16px; cursor:pointer;
+  background:var(--accent); color:var(--primary-ink); font-weight:700; font-size:14px;
+  box-shadow:0 6px 16px rgba(255,122,182,.22);
+  transition:transform .05s ease, filter .2s ease; flex:0 0 auto; min-height:var(--touch);
+}
+.btn:hover{ filter:brightness(1.05); }
+.btn:active{ transform:translateY(1px); }
+.btn.ghost{ background:#f3ecff; color:#6b5ca5; box-shadow:none; }
+.btn.primary{ background:var(--primary); }
+.btn.small{ padding:10px 12px; font-size:13px; min-height:var(--touch); }
+.btn.danger{ background:#ff6b6b; }
+
+.container{ display:grid; grid-template-columns:1fr; gap:var(--gap); padding:12px 0; max-width:1100px; margin:0 auto; }
+.sidebar{ position:static; }
+.kid-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+
+/* ===== 아이 탭: GRID 2열 (아주 좁으면 1열) ===== */
+.kid-tabs{
+  list-style:none; margin:0; padding:0;
+  display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px;
+}
+@media (max-width: 360px){
+  .kid-tabs{ grid-template-columns: 1fr; }
+}
+.kid-card{
+  display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--card);
+  border-radius:16px; box-shadow:var(--shadow); border:2px solid transparent; cursor:pointer;
+  width:100%; min-width:0;
+}
+.kid-card.active{ border-color:var(--primary); }
+.kid-avatar{
+  width:40px; height:40px; border-radius:12px; display:grid; place-items:center; font-size:22px;
+  background:#ffe9f2; border:2px dashed rgba(0,0,0,.05);
+}
+.kid-meta{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.kid-name{ font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kid-sub{ font-size:12px; color:var(--muted); }
+.tip{ color:var(--muted); font-size:12px; margin-top:6px; }
+
+.content{ display:grid; gap:var(--gap); }
+.card{ background:var(--card); border-radius:var(--radius-lg); padding:14px; box-shadow:var(--shadow); }
+
+.overview-row{ display:grid; grid-template-columns:1fr; gap:10px; }
+.overview-item .title{ font-size:12px; color:var(--muted); }
+.overview-item .value{ font-family:'Jua', cursive; font-size:26px; }
+.value.pos{ color:var(--pos);} .value.neg{ color:var(--neg); }
+.allowance{ margin-top:10px; padding:10px; border:2px dashed #ffe3ef; border-radius:16px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+
+.tx-form{ display:grid; gap:10px; }
+.tx-form .row{ display:flex; flex-direction:column; gap:10px; }
+.tx-form .row.end{ flex-direction:row; justify-content:flex-end; }
+label{ display:flex; flex-direction:column; gap:6px; font-size:13px; }
+input[type="text"],input[type="number"],input[type="date"],select{
+  appearance:none; border:2px solid #efe9ff; border-radius:12px; padding:12px; font-size:16px; background:#fff;
+  outline:none; transition:border-color .2s ease, box-shadow .2s ease; min-height:var(--touch);
+}
+input:focus,select:focus{ border-color:#d8ccff; box-shadow:0 0 0 6px var(--ring); }
+.seg{ display:flex; align-items:center; gap:8px; padding:6px 10px; border:2px solid #efe9ff; border-radius:999px; }
+.seg input{ accent-color:var(--primary); min-height:var(--touch); }
+
+.list-header{ display:grid; gap:10px; }
+.filters{ display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.filters select{ flex:0 0 48%; min-width:160px; }
+
+.tx-list{ list-style:none; padding:0; margin:0; display:grid; gap:8px; }
+.tx-item{
+  display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center;
+  padding:12px; border:1px solid #f1ecff; border-radius:14px; background:#fff7ff;
+}
+.tx-main{ display:flex; align-items:center; gap:10px; min-height:var(--touch); }
+.tx-emoji{ width:36px; height:36px; display:grid; place-items:center; border-radius:10px; background:#fff; border:2px dashed #ffe3ef; }
+.tx-title{ font-weight:700; } .tx-sub{ font-size:12px; color:var(--muted); }
+.tx-amt{ font-weight:800; } .tx-amt.pos{ color:var(--pos);} .tx-amt.neg{ color:var(--neg); }
+.icon-btn{ border:0; background:transparent; cursor:pointer; font-size:18px; line-height:1; padding:10px; border-radius:10px; min-width:var(--touch); min-height:var(--touch); margin:-6px 0; }
+.icon-btn:hover{ background:#ffeef6; }
+.empty{ text-align:center; color:var(--muted); padding:14px; }
+
+dialog{ border:0; border-radius:var(--radius-lg); padding:0; box-shadow:var(--shadow); }
+.modal-card{ padding:14px; display:grid; gap:10px; min-width:min(92vw,420px); }
+.modal-actions{ display:flex; justify-content:flex-end; gap:8px; }
+.kid-menu menu{ padding:14px; display:grid; gap:8px; }
+.app-footer{ text-align:center; color:var(--muted); padding:16px; font-size:13px; }
+
+@media (min-width:901px){
+  .app-header{ grid-template-columns:auto 1fr; align-items:center; }
+  .container{ grid-template-columns:280px 1fr; }
+  .sidebar{ position:sticky; top:74px; height:fit-content; }
+  .kid-tabs{ grid-template-columns:1fr; } /* 사이드바 폭에 맞춰 세로 리스트 */
+}
