@@ -3,7 +3,7 @@
 // 로컬은 lastKidId만 보관 (UX 용)
 // -----------------------------------------------
 // 꼭 바꿔주세요 ↓ (Apps Script 배포한 웹앱 URL)
-const API_URL = "https://script.google.com/macros/s/AKfycbyerpvpUJpDxtn4LD42me1O6kF7aGY0Cwo13UU6J4UmSDANVnFw9cWuY2XXl1k81xi_KQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbynh43nMHQn9hTh0dWXUTl-CEY9y9BkPa2R1szYxYrHaPR_7RTkaFEGE6axYPC4Azl3LA/exec";
 
 // 시트 헤더(첫 행)는 다음과 같아야 해요:
 // kidId | kidName | kidEmoji | kidColor | weekly | txId | date | type | amount | category | sticker | note | createdAt
