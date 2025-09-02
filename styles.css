@@ -198,3 +198,61 @@ dialog{ border: 0; border-radius: var(--radius-lg); padding: 0; box-shadow: var(
   width: calc(100vw - 40px);
 }
 .kid-name{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* ===== 모바일 고정 & 스냅 맞춤 덮어쓰기 ===== */
+html, body { overflow-x: hidden; }
+body {
+  /* iOS 더블탭 확대 방지에 도움 */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  font-size: 16px; /* iOS 입력시 자동줌 방지 */
+}
+
+/* 헤더/컨테이너 세이프에어리어 패딩 유지 */
+.app-header,
+.container,
+.app-footer{
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+}
+
+/* 아이 탭: 화면 너비에 딱 맞는 '한 장씩' 스냅 스크롤 */
+.kid-tabs{
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding-right: max(12px, env(safe-area-inset-right));
+  scroll-padding: 12px;
+}
+.kid-tabs::-webkit-scrollbar { display: none; }
+
+/* 카드 폭 = 화면폭(좌우 패딩 감안)로 고정 → 잘림 없음 */
+.kid-card{
+  scroll-snap-align: start;
+  width: calc(100vw - 40px);
+  min-width: calc(100vw - 40px);
+  max-width: calc(100vw - 40px);
+}
+
+/* 이름이 길어도 말줄임 */
+.kid-name{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 입력 컨트롤도 16px 유지 → 확대 방지 */
+input[type="text"], input[type="number"], input[type="date"], select {
+  font-size: 16px;
+  min-height: 44px;
+}
+
+/* 아주 넓은 화면(태블릿/PC)에서는 기존 2열로 */
+@media (min-width: 901px){
+  .kid-tabs{
+    display: grid;
+    grid-auto-flow: row;
+    overflow: visible;
+  }
+  .kid-card{
+    width: auto; min-width: unset; max-width: unset;
+  }
+}
