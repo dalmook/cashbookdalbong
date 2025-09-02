@@ -6,7 +6,7 @@ const firebaseConfig = {
   appId: "1:221695589603:web:188fc0f7da29523b47d9d6",
 };
 
-const SPACE_KEY = "kiddyBudget_spaceId";
+const SPACE_KEY = "dalbong";
 const LOCAL_LAST = "kiddyBudget_lastKidId";
 
 // SDK (ESM)
