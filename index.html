@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>꼬마 가계부 · Multi-Kid Allowance</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-emoji">🐷</span>
+      <h1>꼬마 가계부</h1>
+    </div>
+    <nav class="top-actions">
+      <button id="btnExport" class="btn ghost" title="JSON로 내보내기">내보내기</button>
+      <label for="importFile" class="btn ghost" title="JSON에서 불러오기">가져오기</label>
+      <input type="file" id="importFile" accept="application/json" hidden />
+      <button id="btnAddDemo" class="btn ghost" title="데모 데이터 채우기">데모 추가</button>
+      <a class="btn primary" href="https://github.com/new" target="_blank" rel="noopener">GitHub Pages 배포</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <aside class="sidebar">
+      <div class="kid-header">
+        <h2>아이들</h2>
+        <button id="btnAddKid" class="btn small">+ 아이 추가</button>
+      </div>
+      <ul id="kidTabs" class="kid-tabs"></ul>
+      <div class="tip">
+        <p>아이 카드를 탭하면 전환돼요. 길게 누르면 <b>수정/삭제</b>가 떠요!</p>
+      </div>
+    </aside>
+
+    <section class="content">
+      <div id="overview" class="card overview">
+        <div class="overview-row">
+          <div class="overview-item">
+            <div class="title">현재 잔액</div>
+            <div class="value" id="currentBalance">₩0</div>
+          </div>
+          <div class="overview-item">
+            <div class="title">이번달 수입</div>
+            <div class="value pos" id="monthIncome">₩0</div>
+          </div>
+          <div class="overview-item">
+            <div class="title">이번달 지출</div>
+            <div class="value neg" id="monthExpense">₩0</div>
+          </div>
+        </div>
+        <div class="allowance">
+          <div>
+            <div class="title">주간 용돈</div>
+            <div class="value" id="weeklyAllowance">₩0</div>
+          </div>
+          <button id="btnPayAllowance" class="btn primary">이번 주 용돈 지급 💸</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>기록 추가</h3>
+        <form id="txForm" class="tx-form">
+          <div class="row">
+            <label class="seg">
+              <input type="radio" name="type" value="income" checked>
+              <span>수입</span>
+            </label>
+            <label class="seg">
+              <input type="radio" name="type" value="expense">
+              <span>지출</span>
+            </label>
+          </div>
+          <div class="row">
+            <label>날짜
+              <input type="date" id="txDate" required>
+            </label>
+            <label>금액(원)
+              <input type="number" id="txAmount" inputmode="numeric" min="0" step="100" placeholder="1000" required>
+            </label>
+          </div>
+          <div class="row">
+            <label>분류
+              <select id="txCategory">
+                <option value="용돈">용돈</option>
+                <option value="선물">선물</option>
+                <option value="미션보상">미션보상</option>
+                <option value="저금통">저금통</option>
+                <option value="간식">간식</option>
+                <option value="장난감">장난감</option>
+                <option value="학용품">학용품</option>
+                <option value="교육">교육</option>
+                <option value="기타">기타</option>
+              </select>
+            </label>
+            <label>스티커
+              <select id="txSticker">
+                <option value="">—</option>
+                <option>⭐</option><option>🍭</option><option>🧸</option>
+                <option>🍪</option><option>🎈</option><option>🪙</option>
+                <option>🌈</option><option>💖</option><option>🎁</option>
+              </select>
+            </label>
+          </div>
+          <label>메모
+            <input type="text" id="txNote" maxlength="60" placeholder="예: 책 읽기 미션 보상">
+          </label>
+          <div class="row end">
+            <button type="submit" class="btn primary">저장</button>
+            <button type="reset" class="btn ghost">리셋</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="list-header">
+          <h3>거래 내역</h3>
+          <div class="filters">
+            <select id="filterMonth"></select>
+            <select id="filterType">
+              <option value="">전체</option>
+              <option value="income">수입</option>
+              <option value="expense">지출</option>
+            </select>
+            <select id="filterCat">
+              <option value="">분류 전체</option>
+              <option value="용돈">용돈</option>
+              <option value="선물">선물</option>
+              <option value="미션보상">미션보상</option>
+              <option value="저금통">저금통</option>
+              <option value="간식">간식</option>
+              <option value="장난감">장난감</option>
+              <option value="학용품">학용품</option>
+              <option value="교육">교육</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+        </div>
+        <ul id="txList" class="tx-list"></ul>
+        <div id="emptyState" class="empty">아직 기록이 없어요. 첫 기록을 추가해 보세요! 📝</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add/Edit Kid Modal -->
+  <dialog id="kidModal">
+    <form method="dialog" class="modal-card" id="kidForm">
+      <h3 id="kidModalTitle">아이 추가</h3>
+      <label>이름
+        <input type="text" id="kidName" required maxlength="12" placeholder="예: 유겸" />
+      </label>
+      <label>아이모지(선택)
+        <input type="text" id="kidEmoji" maxlength="2" placeholder="🐰" />
+      </label>
+      <label>대표 색상
+        <input type="color" id="kidColor" value="#ffd9e6" />
+      </label>
+      <label>주간 용돈(원)
+        <input type="number" id="kidWeekly" min="0" step="100" placeholder="2000" />
+      </label>
+      <menu class="modal-actions">
+        <button value="cancel" class="btn ghost">취소</button>
+        <button id="kidSave" value="default" class="btn primary">저장</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- Kid context menu -->
+  <dialog id="kidMenu" class="kid-menu">
+    <menu>
+      <button id="kidEdit" class="btn">수정</button>
+      <button id="kidDelete" class="btn danger">삭제</button>
+      <button id="kidClose" class="btn ghost">닫기</button>
+    </menu>
+  </dialog>
+
+  <footer class="app-footer">
+    <span>© 꼬마 가계부 · 로컬 저장 (이 브라우저에서만 저장돼요)</span>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
