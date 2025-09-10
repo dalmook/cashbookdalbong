@@ -258,9 +258,10 @@ function renderTxList(){
   const arr = (state.transactions[id]||[])
     .filter(t=>{
       const d = normalizeDateString(t.date);
-      if(ym && !((d||"").startsWith(ym))) return false;
-      if(tp && t.type !== tp) return false;
-      if(cat && t.category !== cat) return false;
+      const monthEq = d ? d.slice(0,7) === ym : false;
+      if (ym && !monthEq) return false;
+      if (tp && t.type !== tp) return false;
+      if (cat && t.category !== cat) return false;
       return true;
     });
 
