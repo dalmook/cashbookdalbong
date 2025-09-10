@@ -72,6 +72,17 @@ function normalizeDateString(d){
   // string: 허용 가능한 포맷 시도
   const str = String(d).trim();
   // "2025-9-2" -> pad
+  // 8자리 숫자 yyyymmdd -> YYYY-MM-DD
+  if (/^\d{8}$/.test(str)) {
+  const y = str.slice(0,4), m = str.slice(4,6), day = str.slice(6,8);
+  return `${y}-${m}-${day}`;
+  }
+  // YYYY/M/D -> YYYY-MM-DD
+  const mSlash = str.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+  if (mSlash) {
+  const [_, y, mo, da] = mSlash;
+  return `${y}-${mo.padStart(2,'0')}-${da.padStart(2,'0')}`;
+  }
   const m = str.match(/^(\d{2,4})-(\d{1,2})-(\d{1,2})$/);
   if (m) {
     const y = m[1].length===2 ? `20${m[1]}` : m[1];
