@@ -60,41 +60,52 @@ function uidGen(prefix="id"){ return prefix + Math.random().toString(36).slice(2
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 txDate.valueAsDate = new Date();
 
-// 날짜 정규화: Timestamp/Date/string 모두 "YYYY-MM-DD" 로 변환
+// 날짜를 Timestamp/Date/문자열(YYYY-M-D, YYYY/MM/DD, 8자리 숫자 등) → "YYYY-MM-DD" 로 정규화
 function normalizeDateString(d){
   if(!d) return "";
-  // Firestore Timestamp?
+
+  // Firestore Timestamp
   if (typeof d === "object" && typeof d.toDate === "function") {
     return d.toDate().toISOString().slice(0,10);
   }
-  // JS Date?
-  if (d instanceof Date) return d.toISOString().slice(0,10);
-  // string: 허용 가능한 포맷 시도
-  const str = String(d).trim();
-  // "2025-9-2" -> pad
-  // 8자리 숫자 yyyymmdd -> YYYY-MM-DD
-  if (/^\d{8}$/.test(str)) {
-  const y = str.slice(0,4), m = str.slice(4,6), day = str.slice(6,8);
-  return `${y}-${m}-${day}`;
+
+  // JS Date
+  if (d instanceof Date) {
+    return d.toISOString().slice(0,10);
   }
-  // YYYY/M/D -> YYYY-MM-DD
+
+  // 문자열로 통일
+  const str = String(d).trim();
+
+  // 8자리 숫자 yyyymmdd → YYYY-MM-DD
+  if (/^\d{8}$/.test(str)) {
+    const y = str.slice(0,4), m = str.slice(4,6), day = str.slice(6,8);
+    return `${y}-${m}-${day}`;
+  }
+
+  // YYYY/M/D, YYYY-M-D, YYYY.M.D → YYYY-MM-DD
   const mSlash = str.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
   if (mSlash) {
-  const [_, y, mo, da] = mSlash;
-  return `${y}-${mo.padStart(2,'0')}-${da.padStart(2,'0')}`;
+    const [_, y, mo, da] = mSlash;
+    return `${y}-${mo.padStart(2,'0')}-${da.padStart(2,'0')}`;
   }
+
+  // YYYY-M-D or YY-M-D → YYYY-MM-DD
   const m = str.match(/^(\d{2,4})-(\d{1,2})-(\d{1,2})$/);
   if (m) {
     const y = m[1].length===2 ? `20${m[1]}` : m[1];
-    const mm = m[2].padStart(2,'0');
-    const dd = m[3].padStart(2,'0');
-    return `${y}-${mm}-${dd}`;
+    return `${y}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
   }
-  // 이미 ISO형 "YYYY-MM-DD" 시작이면 앞 10자리만
-  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0,10);
-  // 마지막 수단: Date로 파싱
+
+  // 이미 ISO 형태면 앞 10글자만 사용
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    return str.slice(0,10);
+  }
+
+  // 마지막 수단: Date 파싱
   const d2 = new Date(str);
   if(!isNaN(d2)) return d2.toISOString().slice(0,10);
+
   return "";
 }
 
@@ -151,30 +162,45 @@ function listenKids(){
   });
 }
 function listenTransactions(){
-  if(unsubTx) unsubTx();
+  if (typeof unsubTx === "function") unsubTx();
+
   const colRef = collection(db, "spaces", spaceId, "transactions");
-  // 인덱스 없다면 orderBy("date","desc") 하나만 써도 됩니다.
-  const q = query(colRef, orderBy("date", "desc"));
-  unsubTx = onSnapshot(q, (snap)=>{
+
+  // 인덱스가 없다면 orderBy("date","desc") 한 개만 사용하세요.
+  const qy = query(colRef, orderBy("date", "desc"));
+
+  unsubTx = onSnapshot(qy, (snap)=>{
     const byKid = {};
+
     snap.forEach(docSnap=>{
       const t = docSnap.data();
-      if(t.deleted) return;
+      if (t.deleted) return;
+
       const kid = t.kidId;
-      // 날짜 정규화 보관
-      const normDate = normalizeDateString(t.date);
+      const normDate = normalizeDateString(t.date);  // ★ 들어오는 즉시 표준화
       byKid[kid] ||= [];
-      byKid[kid].push({ id: docSnap.id, ...t, date: normDate });
+      byKid[kid].push({
+        id: docSnap.id,
+        ...t,
+        date: normDate,             // 표준화된 날짜를 상태에 저장
+      });
     });
-    // 보조 정렬(createdAt) - 클라이언트에서
+
+    // 보조 정렬(createdAt)을 클라이언트에서 보강
     Object.keys(byKid).forEach(k=>{
       byKid[k].sort((a,b)=>
         (b.date||"").localeCompare(a.date||"") ||
         ((a.createdAt?.toMillis?.()||0) < (b.createdAt?.toMillis?.()||0) ? 1 : -1)
       );
     });
+
     state.transactions = byKid;
-    renderOverview(); renderTxList();
+
+    // 실시간 반영
+    renderOverview();
+    renderTxList();
+  }, (err)=>{
+    console.error("onSnapshot(transactions) error:", err);
   });
 }
 
@@ -248,46 +274,66 @@ function renderFilters(){
   filterMonth.value = new Date().toISOString().slice(0,7);
 }
 function renderTxList(){
-  txList.innerHTML = ""; emptyState.style.display = "none";
-  const id = state.currentKidId;
-  if(!id){ emptyState.style.display="block"; return; }
-  const ym = filterMonth.value;                 // "YYYY-MM"
-  const tp = filterType.value;
-  const cat = filterCat.value;
+  txList.innerHTML = "";
+  emptyState.style.display = "none";
 
-  const arr = (state.transactions[id]||[])
-    .filter(t=>{
-      const d = normalizeDateString(t.date);
-      const monthEq = d ? d.slice(0,7) === ym : false;
-      if (ym && !monthEq) return false;
-      if (tp && t.type !== tp) return false;
-      if (cat && t.category !== cat) return false;
-      return true;
-    });
+  const kidId = state.currentKidId;
+  if (!kidId) {
+    emptyState.style.display = "block";
+    return;
+  }
 
-  if(arr.length===0){ emptyState.style.display="block"; return; }
+  const ym = filterMonth.value;   // "YYYY-MM"
+  const tp = filterType.value;    // "", "income", "expense"
+  const cat = filterCat.value;    // "", "용돈", ...
 
-  for(const t of arr){
-    const amtClass = t.type==='income'?'pos':'neg';
-    const sign = t.type==='income'?'+':'-';
-    const emoji = t.sticker || (t.type==='income'?'🪙':'🍭');
-    const title = `${t.category} ${t.note? '· '+escapeHtml(t.note):''}`;
-    const li = document.createElement('li');
+  // 표준화된 날짜를 기준으로 필터
+  const filtered = (state.transactions[kidId] || []).filter(t=>{
+    const d = normalizeDateString(t.date);            // 안전하게 한번 더 보장
+    const monthEq = d ? d.slice(0,7) === ym : false;  // ★ 앞 7자리 완전 일치 비교
+    if (ym && !monthEq) return false;
+    if (tp && t.type !== tp) return false;
+    if (cat && t.category !== cat) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    emptyState.style.display = "block";
+    return;
+  }
+
+  for (const t of filtered) {
+    const amtClass = t.type === "income" ? "pos" : "neg";
+    const sign = t.type === "income" ? "+" : "-";
+    const emoji = t.sticker || (t.type === "income" ? "🪙" : "🍭");
+    const title = `${t.category} ${t.note ? "· " + escapeHtml(t.note) : ""}`;
+
+    const li = document.createElement("li");
     li.className = "tx-item";
     li.innerHTML = `
       <div class="tx-main">
         <div class="tx-emoji">${emoji}</div>
-        <div><div class="tx-title">${title}</div><div class="tx-sub">${normalizeDateString(t.date)}</div></div>
+        <div>
+          <div class="tx-title">${title}</div>
+          <div class="tx-sub">${normalizeDateString(t.date)}</div>
+        </div>
       </div>
       <div class="tx-actions">
         <div class="tx-amt ${amtClass}">${sign}${KRWfmt(t.amount)}</div>
         <button class="icon-btn" title="수정" data-act="edit" data-id="${t.id}">✏️</button>
         <button class="icon-btn" title="삭제" data-act="del" data-id="${t.id}">🗑️</button>
-      </div>`;
+      </div>
+    `;
     txList.appendChild(li);
   }
-  txList.querySelectorAll('[data-act="del"]').forEach(b=> b.addEventListener('click',()=> deleteTx(b.dataset.id)));
-  txList.querySelectorAll('[data-act="edit"]').forEach(b=> b.addEventListener('click',()=> editTxPrompt(b.dataset.id)));
+
+  // 액션 바인딩
+  txList.querySelectorAll('[data-act="del"]').forEach(b=>{
+    b.addEventListener('click', ()=> deleteTx(b.dataset.id));
+  });
+  txList.querySelectorAll('[data-act="edit"]').forEach(b=>{
+    b.addEventListener('click', ()=> editTxPrompt(b.dataset.id));
+  });
 }
 
 // 아이 CRUD (낙관적 렌더 포함)
