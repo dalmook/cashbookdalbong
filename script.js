@@ -239,12 +239,13 @@ function renderFilters(){
   const now = new Date();
   for(let i=0;i<18;i++){
     const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-    const ym = d.toISOString().slice(0,7);
+    const ym = ymLocal(d);                 // ✅ 로컬 기준 YYYY-MM
     const opt = document.createElement('option');
-    opt.value = ym; opt.textContent = `${d.getFullYear()}년 ${d.getMonth()+1}월`;
+    opt.value = ym;
+    opt.textContent = `${d.getFullYear()}년 ${d.getMonth()+1}월`;
     filterMonth.appendChild(opt);
   }
-  filterMonth.value = new Date().toISOString().slice(0,7);
+  filterMonth.value = ymLocal(new Date());  // ✅ 기본값도 로컬 기준
 }
 function monthlyTotals(kidId, ym){
   let inc=0, exp=0;
