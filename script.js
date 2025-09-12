@@ -69,6 +69,12 @@ function uidGen(prefix="id"){ return prefix + Math.random().toString(36).slice(2
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 txDate.valueAsDate = new Date();
 
+// 로컬 타임존 기준 YYYY-MM
+function ymLocal(d = new Date()){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  return `${y}-${m}`;
+}
 // 날짜를 다양한 입력값 → "YYYY-MM-DD" 로 정규화
 function normalizeDateString(d){
   if(!d) return "";
